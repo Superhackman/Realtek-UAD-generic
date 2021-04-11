@@ -4,7 +4,7 @@
 @CMD /C EXIT 0
 @"%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system" >nul 2>&1
 @if NOT "%ERRORLEVEL%"=="0" (
-@powershell -Command Start-Process ""%0"" -Verb runAs 2>nul
+@powershell -Command Start-Process """%0""" -Verb runAs 2>nul
 @exit
 )
 :--------------------------------------
@@ -21,6 +21,7 @@
 @pause
 @GOTO ending
 )
+
 @echo Welcome to Unofficial Realtek UAD generic setup wizard.
 @echo WARNING: This setup may spontaneously restart your computer so please be prepared for it.
 @echo.
@@ -32,6 +33,12 @@
 @echo.
 @IF NOT EXIST assets md assets
 
+@echo Enabling Windows script host...
+@CMD /C EXIT 0
+@REG QUERY "HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings" /v "Enabled" /t REG_DWORD >nul 2>&1
+@IF "%ERRORLEVEL%"=="0" REG DELETE "HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings" /v "Enabled" /f
+@echo.
+
 @rem Prompt to skip to force updater
 @IF EXIST forceupdater\forceupdater.cmd IF EXIST Win64\Realtek\UpdatedCodec IF "%SAFEBOOT_OPTION%"=="" set /p forceupdateonly=For advanced users: Do you want to manage yourself, updates of codec, extension and software components (HSA, APO, Service) - y/n, default=n:
 @IF EXIST forceupdater\forceupdater.cmd IF EXIST Win64\Realtek\UpdatedCodec IF "%SAFEBOOT_OPTION%"=="" echo.
@@ -42,7 +49,7 @@
 @echo Creating setup autostart entry...
 @call modules\autostart.cmd setup
 
-@rem Get initial Windows pending file opertions status
+@rem Get initial Windows pending file operations status
 @REG QUERY "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" /v PendingFileRenameOperations>assets\prvregdmp.txt 2>&1
 
 @echo Begin uninstalling Realtek UAD driver...
@@ -120,7 +127,7 @@ call modules\deluadcomponent.cmd !oemcomponent!
 @echo Removing autostart entry in case installation is rejected...
 @call modules\autostart.cmd remove
 @IF NOT "%SAFEBOOT_OPTION%"=="" IF EXIST assets\mainsetupsystemcrash.ini (
-@echo WARNING: Windows crashed during main setup driver initiallization phase.
+@echo WARNING: Windows crashed during the main setup driver initialization phase.
 @echo UAD driver installation is canceled.
 @echo.
 @pause
@@ -169,7 +176,7 @@ call modules\deluadcomponent.cmd !oemcomponent!
 )
 
 @rem Check if reboot is required
-@rem Get final Windows pending file opertions status
+@rem Get final Windows pending file operations status
 @REG QUERY "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" /v PendingFileRenameOperations>assets\postregdmp.txt 2>&1
 @FC /B assets\prvregdmp.txt assets\postregdmp.txt>NUL&&GOTO forceupdater
 @IF EXIST assets\prvregdmp.txt del assets\prvregdmp.txt
